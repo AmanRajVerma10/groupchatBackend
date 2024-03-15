@@ -11,4 +11,6 @@ router.post("/sendmessage", userController.sendMessage);
 
 router.get("/getmessages", userController.getMessages);
 
+router.get('/allusers',userController.getUsers);
+
 module.exports = router;

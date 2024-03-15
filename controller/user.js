@@ -101,3 +101,22 @@ exports.getMessages = async (req, res, next) => {
     res.status(401).json({ success: false, message: "Wrong" });
   }
 };
+
+exports.getUsers= async (req,res,next)=>{
+  try {
+    const data= await User.findAll();
+    if (!data) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Something went wrong!" });
+    }
+    return res.status(200).json({success:true,users:data})
+  } catch (error) {
+    if (!data) {
+      return res
+        .status(402)
+        .json({ success: false, message: "Something went wrong!" });
+    }
+    
+  }
+}
