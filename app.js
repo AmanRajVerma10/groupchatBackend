@@ -1,3 +1,4 @@
+const Sequelize=require('sequelize')
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -21,6 +22,17 @@ app.use(
 );
 
 app.use('/user',userRoutes);
+
+app.get('/user/getNewMessages', async (req, res) => {
+  const lastMessageId = req.query.lastMessageId;
+  try {
+    const newMessages = await Message.findAll({ where: { id: { [Sequelize.Op.gt]: lastMessageId } } });
+    res.json({ messages: newMessages });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error fetching new messages' });
+  }
+});
 
 sequelize
   .sync()
