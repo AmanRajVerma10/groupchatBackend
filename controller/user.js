@@ -75,7 +75,6 @@ exports.login = async (req, res, next) => {
 exports.sendMessage = async (req, res, next) => {
   try {
     const { id, message } = req.body;
-    console.log("this isss",id);
     const createMessage = await Message.create({ text: message, userId: id });
     if (!createMessage) {
       return res
@@ -86,5 +85,19 @@ exports.sendMessage = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     return res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getMessages = async (req, res, next) => {
+  try {
+    const data = await Message.findAll();
+    if (!data) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Something went wrong!" });
+    }
+    return res.status(200).json({ success: true, message: data });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Wrong" });
   }
 };
