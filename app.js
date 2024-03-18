@@ -7,10 +7,13 @@ require("dotenv").config();
 const sequelize = require("./util/database");
 const User = require("./model/user");
 const Message= require("./model/message");
+const Group= require("./model/group")
 const userRoutes= require('./routes/user');
 
-User.hasMany(Message);
-Message.hasOne(User);
+User.belongsToMany(Group, { through: 'UserGroup' });
+Group.belongsToMany(User, { through: 'UserGroup' });
+Message.belongsTo(Group);
+Message.belongsTo(User);
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -22,6 +25,27 @@ app.use(
 );
 
 app.use('/user',userRoutes);
+
+app.post('/groups/create', async (req, res) => {
+  try {
+    const group = await Group.create({ name: req.body.name, creatorId: req.body.creatorId });
+    res.status(201).json({ group });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while creating the group' });
+  }
+});
+
+app.get('/groups', async (req, res) => {
+  try {
+    const groups = await Group.findAll();
+    res.status(200).json({ groups });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while fetching groups' });
+  }
+});
+
 
 app.get('/user/getNewMessages', async (req, res) => {
   const lastMessageId = req.query.lastMessageId;

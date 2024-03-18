@@ -11,6 +11,10 @@ router.post("/sendmessage", userController.sendMessage);
 
 router.get("/getmessages", userController.getMessages);
 
-router.get('/allusers',userController.getUsers);
+router.get("/allusers", userController.getUsers);
+router.post("/invite", userController.inviteOthers);
+
+router.post("/creategroup", userController.createGroup);
+router.get("/getgroups", userController.getGroups);
 
 module.exports = router;

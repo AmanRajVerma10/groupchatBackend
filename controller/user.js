@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 
 const User = require("../model/user");
 const Message = require("../model/message");
+const Group = require("../model/group");
 
 function generateAccessToken(id, name) {
   return jwt.sign({ userId: id, name }, process.env.JWT_SECRETKEY);
@@ -74,8 +75,12 @@ exports.login = async (req, res, next) => {
 
 exports.sendMessage = async (req, res, next) => {
   try {
-    const { id, message } = req.body;
-    const createMessage = await Message.create({ text: message, userId: id });
+    const { id, message, gId } = req.body;
+    const createMessage = await Message.create({
+      text: message,
+      userId: id,
+      groupId: gId,
+    });
     if (!createMessage) {
       return res
         .status(400)
@@ -90,7 +95,8 @@ exports.sendMessage = async (req, res, next) => {
 
 exports.getMessages = async (req, res, next) => {
   try {
-    const data = await Message.findAll();
+    const groupId = req.query.groupid;
+    const data = await Message.findAll({ where: { groupId } });
     if (!data) {
       return res
         .status(400)
@@ -102,21 +108,70 @@ exports.getMessages = async (req, res, next) => {
   }
 };
 
-exports.getUsers= async (req,res,next)=>{
+exports.getUsers = async (req, res, next) => {
   try {
-    const data= await User.findAll();
-    if (!data) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Something went wrong!" });
+    const groupId = req.query.groupid;
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      throw new Error("Group not found");
     }
-    return res.status(200).json({success:true,users:data})
+    const data = await group.getUsers();
+    if (!data) {
+      throw new Error("Something went wrong");
+    }
+    return res.status(200).json({ success: true, users: data });
   } catch (error) {
-    if (!data) {
-      return res
-        .status(402)
-        .json({ success: false, message: "Something went wrong!" });
-    }
-    
+    return res.status(402).json({ success: false, message: error.message });
   }
-}
+};
+
+exports.createGroup = async (req, res, next) => {
+  try {
+    const { name, adminId } = req.body;
+    const data = await Group.create({ name, admin: adminId });
+    if (!data) {
+      return res.status(400).json({ err: "something went wrong!" });
+    }
+    const user = await User.findByPk(adminId);
+    const group = await Group.findByPk(data.id);
+    if (!user || !group) {
+      throw new Error("User or group not found");
+    }
+    await user.addGroup(group);
+    return res.status(200).json({ message: "Group Created" });
+  } catch (error) {
+    return res.status(401).json({ error: error.message });
+  }
+};
+
+exports.getGroups = async (req, res, next) => {
+  try {
+    const id = req.query.userid;
+    const user = await User.findByPk(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const groups = await user.getGroups();
+    if (!groups) {
+      return res.status(200).json({ message: "No groups found!" });
+    }
+    return res.status(201).json({ groups });
+  } catch (error) {
+    return res.status(400).json({ err: error.message });
+  }
+};
+
+exports.inviteOthers = async (req, res, next) => {
+  const { groupId, userId } = req.body;
+  try {
+    const user = await User.findByPk(userId);
+    const group = await Group.findByPk(groupId);
+    if (!user || !group) {
+      throw new Error("User or group not found");
+    }
+    await user.addGroup(group);
+    return res.status(200).json({ success: true, message: "user added" });
+  } catch (error) {
+    return res.status(401).json({ success: false, message: error.message });
+  }
+};
