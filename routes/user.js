@@ -13,6 +13,9 @@ router.get("/getmessages", userController.getMessages);
 
 router.get("/allusers", userController.getUsers);
 router.post("/invite", userController.inviteOthers);
+router.post("/remove",userController.removeOthers);
+router.post("/makeadmin",userController.makeAdmin);
+router.post('/isadmin',userController.isAdmin);
 
 router.post("/creategroup", userController.createGroup);
 router.get("/getgroups", userController.getGroups);

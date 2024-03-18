@@ -138,6 +138,7 @@ exports.createGroup = async (req, res, next) => {
       throw new Error("User or group not found");
     }
     await user.addGroup(group);
+    await group.addAdmin(user);
     return res.status(200).json({ message: "Group Created" });
   } catch (error) {
     return res.status(401).json({ error: error.message });
@@ -175,3 +176,56 @@ exports.inviteOthers = async (req, res, next) => {
     return res.status(401).json({ success: false, message: error.message });
   }
 };
+
+exports.removeOthers = async (req, res, next) => {
+  try {
+    const { userId, groupId } = req.body;
+    const group = await Group.findByPk(groupId);
+    const user = await User.findByPk(userId);
+    if (!group || !user) {
+      throw new Error("Group/User not found!");
+    }
+    await group.removeUser(user);
+    return res
+      .status(200)
+      .json({ success: true, message: `User with id ${userId} removed` });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.makeAdmin= async(req,res,next)=>{
+  try {
+    const{groupId,userId}=req.body;
+    const group= await Group.findByPk(groupId);
+    const user= await User.findByPk(userId);
+    if(!user || !group){
+      throw new Error('User/Group not found!')
+    }
+    await group.addAdmin(user);
+    return res.status(200).json({success:true,message:'New admin added'})
+    
+  } catch (error) {
+    return res.status(400).json({success:false,message:error.message})
+  }
+}
+
+exports.isAdmin= async(req,res,next)=>{
+  const{userId,groupId}=req.body;
+  try {
+    const user= await User.findByPk(userId);
+    const group = await Group.findByPk(groupId, {
+      include: [{ model: User, as: 'Admins' }]
+    });
+    if(!user || !group){
+      throw new Error('User/Group not found!')
+    }
+    const isAdmin = group.Admins.some(admin => admin.id === userId);
+
+    return res.status(200).json({ success:true,message:isAdmin });
+
+  } catch (error) {
+    return res.status(400).json({success:false,message:error.message})
+    
+  }
+}

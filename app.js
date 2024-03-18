@@ -14,6 +14,8 @@ User.belongsToMany(Group, { through: 'UserGroup' });
 Group.belongsToMany(User, { through: 'UserGroup' });
 Message.belongsTo(Group);
 Message.belongsTo(User);
+Group.belongsToMany(User, { through: 'GroupAdmins', as: 'Admins' });
+User.belongsToMany(Group, { through: 'GroupAdmins', as: 'AdminGroups' });
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
